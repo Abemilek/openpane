@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Custom window icon with no third-party logos. -->
+    <path
+        android:pathData="M32,32 L76,32 L76,76 L32,76 Z"
+        android:strokeWidth="4"
+        android:strokeColor="#FFFFFF"
+        android:strokeLineJoin="round" />
+    <path
+        android:pathData="M54,32 L54,76 M32,54 L76,54"
+        android:strokeWidth="4"
+        android:strokeColor="#FFFFFF"
+        android:strokeLineCap="round" />
+</vector>

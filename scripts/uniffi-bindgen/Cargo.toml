@@ -1,0 +1,8 @@
+[package]
+name = "openpane-uniffi-bindgen"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1"
+uniffi = { version = "0.29.5", features = ["cli"] }

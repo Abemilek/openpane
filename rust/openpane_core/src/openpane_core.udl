@@ -1,0 +1,23 @@
+namespace openpane_core {
+    string clean_url(string url);
+};
+
+dictionary FilterRules {
+    sequence<string> muted_words;
+    sequence<string> muted_accounts;
+    boolean hide_promoted;
+};
+
+dictionary PostSummary {
+    string id;
+    string author;
+    string text;
+    boolean promoted;
+};
+
+enum Verdict { "keep", "hide" };
+
+interface Engine {
+    constructor(FilterRules rules);
+    sequence<Verdict> evaluate_batch(sequence<PostSummary> posts);
+};

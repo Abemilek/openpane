@@ -1,0 +1,19 @@
+{
+  "manifest_version": 2,
+  "name": "Openpane UI",
+  "version": "0.2.0",
+  "description": "Small local interface adjustments for Openpane.",
+  "browser_specific_settings": {
+    "gecko": { "id": "openpane-extension@openpane.app" }
+  },
+  "background": { "scripts": ["background.js"] },
+  "permissions": ["nativeMessaging", "geckoViewAddons"],
+  "content_scripts": [
+    {
+      "matches": ["*://x.com/*", "*://*.x.com/*"],
+      "js": ["content.js"],
+      "css": ["content.css"],
+      "run_at": "document_start"
+    }
+  ]
+}

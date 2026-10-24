@@ -1,0 +1,3 @@
+[workspace]
+members = ["openpane_core"]
+resolver = "2"
