@@ -12,11 +12,17 @@ import org.json.JSONObject
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
 import org.mozilla.geckoview.AllowOrDeny
+import org.mozilla.geckoview.ContentBlocking
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoRuntime
+import org.mozilla.geckoview.GeckoRuntimeSettings
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoView
 import org.mozilla.geckoview.WebExtension
+import uniffi.openpane_core.Engine
+import uniffi.openpane_core.FilterRules
+import uniffi.openpane_core.PostSummary
+import uniffi.openpane_core.Verdict
 
 /**
  * Minimal container: one screen with GeckoView loading the X website.
@@ -31,6 +37,7 @@ class MainActivity : ComponentActivity() {
     private var popupSession: GeckoSession? = null
     private var builtInExtension: WebExtension? = null
     private var extensionPort: WebExtension.Port? = null
+    private var filterEngine: Engine? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,7 +48,15 @@ class MainActivity : ComponentActivity() {
         progressBar = findViewById(R.id.progress)
 
         // GeckoRuntime is process-wide, following the GeckoView integration pattern.
-        val rt = runtime ?: GeckoRuntime.create(applicationContext).also { runtime = it }
+        val rt = runtime ?: GeckoRuntime.create(
+            applicationContext,
+            GeckoRuntimeSettings.Builder().contentBlocking(
+                ContentBlocking.Settings.Builder()
+                    .antiTracking(ContentBlocking.AntiTracking.DEFAULT)
+                    .cookieBehavior(ContentBlocking.CookieBehavior.ACCEPT_NON_TRACKERS)
+                    .build()
+            ).build()
+        ).also { runtime = it }
         installBuiltInExtension(rt)
 
         val isNewSession = session == null
@@ -140,6 +155,10 @@ class MainActivity : ComponentActivity() {
                     override fun onConnect(port: WebExtension.Port) {
                         extensionPort = port
                         port.setDelegate(object : WebExtension.PortDelegate {
+                            override fun onPortMessage(message: Any, port: WebExtension.Port) {
+                                handleExtensionMessage(message, port)
+                            }
+
                             override fun onDisconnect(port: WebExtension.Port) {
                                 if (extensionPort === port) extensionPort = null
                             }
@@ -153,7 +172,44 @@ class MainActivity : ComponentActivity() {
 
     private fun sendExtensionRules() {
         extensionPort?.postMessage(
-            JSONObject().put("type", "openpane.rules").put("hideSuggestions", false)
+            JSONObject().put("type", "openpane.rules")
+                .put("hideSuggestions", false)
+                .put("hidePromoted", true)
+        )
+    }
+
+    private fun handleExtensionMessage(message: Any, port: WebExtension.Port) {
+        val request = message as? JSONObject ?: return
+        if (request.optString("type") != "openpane.evaluate") return
+        val postsJson = request.optJSONArray("posts") ?: return
+        val posts = buildList {
+            for (index in 0 until postsJson.length()) {
+                val post = postsJson.optJSONObject(index) ?: continue
+                add(
+                    PostSummary(
+                        id = post.optString("id"),
+                        author = post.optString("author"),
+                        text = post.optString("text"),
+                        promoted = post.optBoolean("promoted")
+                    )
+                )
+            }
+        }
+        if (posts.isEmpty()) return
+        val engine = filterEngine ?: Engine(
+            FilterRules(
+                mutedWords = emptyList(),
+                mutedAccounts = emptyList(),
+                hidePromoted = true
+            )
+        ).also { filterEngine = it }
+        val verdicts = engine.evaluateBatch(posts)
+        val hiddenIds = org.json.JSONArray()
+        posts.zip(verdicts).forEach { (post, verdict) ->
+            if (verdict == Verdict.HIDE) hiddenIds.put(post.id)
+        }
+        port.postMessage(
+            JSONObject().put("type", "openpane.verdicts").put("hiddenIds", hiddenIds)
         )
     }
 
@@ -208,6 +264,8 @@ class MainActivity : ComponentActivity() {
             // X cookies and session data remain in the app profile.
             session?.close()
             session = null
+            filterEngine?.close()
+            filterEngine = null
         } else {
             session?.progressDelegate = null
             session?.navigationDelegate = null

@@ -7,7 +7,10 @@ nativePort.onMessage.addListener((message) => {
 });
 
 browser.runtime.onMessage.addListener((message) => {
-  if (message && message.type === "openpane.rules") nativePort.postMessage(message);
+  if (!message) return;
+  if (message.type === "openpane.rules" || message.type === "openpane.evaluate") {
+    nativePort.postMessage(message);
+  }
 });
 
 nativePort.postMessage({ type: "openpane.ready" });

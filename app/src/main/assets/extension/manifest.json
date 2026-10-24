@@ -7,7 +7,21 @@
     "gecko": { "id": "openpane-extension@openpane.app" }
   },
   "background": { "scripts": ["background.js"] },
-  "permissions": ["nativeMessaging", "geckoViewAddons"],
+  "permissions": [
+    "nativeMessaging",
+    "nativeMessagingFromContent",
+    "geckoViewAddons",
+    "declarativeNetRequest"
+  ],
+  "declarative_net_request": {
+    "rule_resources": [
+      {
+        "id": "privacy_rules",
+        "enabled": true,
+        "path": "rules.json"
+      }
+    ]
+  },
   "content_scripts": [
     {
       "matches": ["*://x.com/*", "*://*.x.com/*"],
