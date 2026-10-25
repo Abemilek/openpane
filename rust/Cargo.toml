@@ -1,3 +1,10 @@
 [workspace]
 members = ["openpane_core"]
 resolver = "2"
+
+# Smaller native library. panic stays "unwind" on purpose: UniFFI turns Rust panics
+# into errors instead of aborting the whole app.
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1

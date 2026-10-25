@@ -13,7 +13,6 @@
         android:id="@+id/popup_gecko_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:elevation="8dp"
         android:visibility="gone" />
 
     <ProgressBar

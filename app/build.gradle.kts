@@ -13,6 +13,16 @@ val abis: List<String> = providers.gradleProperty("abis")
     .map { it.trim() }
     .filter { it.isNotEmpty() }
 
+// Rendering fallbacks (see README, "Rendering problems").
+val useTextureView: Boolean = providers.gradleProperty("renderBackend").getOrElse("surface") == "texture"
+val softwareRender: Boolean = providers.gradleProperty("softwareRender").getOrElse("false").toBoolean()
+
+// true  = native libraries are compressed inside the APK: a much smaller APK file,
+//         but the installed app uses more storage (libraries are extracted at install).
+// false = libraries are stored uncompressed and loaded straight from the APK:
+//         bigger APK file, smallest installed size. This is the default.
+val compressNativeLibs: Boolean = providers.gradleProperty("compressNativeLibs").getOrElse("false").toBoolean()
+
 val keystoreProps = Properties().apply {
     val f = rootProject.file("keystore.properties")
     if (f.exists()) f.inputStream().use { load(it) }
@@ -27,11 +37,24 @@ android {
         minSdk = 29
         // Keep target 34 to avoid mandatory API 35+ edge-to-edge behavior.
         targetSdk = 34
-        versionCode = 2
-        versionName = "0.2.0"
+        versionCode = 3
+        versionName = "0.2.1"
+
+        buildConfigField("boolean", "USE_TEXTURE_VIEW", useTextureView.toString())
+        buildConfigField("boolean", "SOFTWARE_RENDER", softwareRender.toString())
 
         ndk {
             abiFilters.addAll(abis)
+        }
+    }
+
+    buildFeatures {
+        buildConfig = true
+    }
+
+    packaging {
+        jniLibs {
+            useLegacyPackaging = compressNativeLibs
         }
     }
 

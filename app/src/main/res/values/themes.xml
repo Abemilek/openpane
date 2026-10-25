@@ -5,5 +5,8 @@
         <item name="android:windowNoTitle">true</item>
         <item name="android:statusBarColor">@color/bar_black</item>
         <item name="android:navigationBarColor">@color/bar_black</item>
+        <!-- No open/close window animations, and no white flash before the first frame. -->
+        <item name="android:windowAnimationStyle">@null</item>
+        <item name="android:windowBackground">@color/bar_black</item>
     </style>
 </resources>

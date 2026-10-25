@@ -1,1 +1,15 @@
 [data-openpane-hidden="true"] { display: none !important; }
+
+/*
+ * Reduced-motion reset: no CSS animations or transitions.
+ * Durations are 0.01ms (not 0) so animationend / transitionend events still fire
+ * and the page's own logic that waits for them keeps working.
+ */
+*, *::before, *::after {
+  animation-duration: 0.01ms !important;
+  animation-delay: 0s !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  transition-delay: 0s !important;
+  scroll-behavior: auto !important;
+}
